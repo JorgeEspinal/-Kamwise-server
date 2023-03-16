@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
+
 const { Schema } = mongoose;
 
-const postSchema = new Schema({ title: String, description: String });
-const Post = mongoose.model('Post', postSchema);
+const postSchema = new Schema(
+  {
+    title: String,
+    description: String,
+  },
+  { timestamps: true }
+);
 
-export default Post;
+export const Post = mongoose.model('Post', postSchema);

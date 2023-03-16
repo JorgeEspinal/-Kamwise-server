@@ -1,16 +1,11 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import config from './config.js';
+import router from './route.js';
 const app = express();
-const url = `mongodb+srv://test:Q6XVkuxvOgfF4tDd@cluster0.tqwpbbv.mongodb.net/?retryWrites=true&w=majority`;
-const port = 3000;
-
-const { Schema } = mongoose;
-
-const postSchema = new Schema({ title: String, description: String });
-const Post = mongoose.model('Post', postSchema);
 
 mongoose
-  .connect(url, { retryWrites: true, w: 'majority' })
+  .connect(config.mongo.url, { retryWrites: true, w: 'majority' })
   .then(() => {
     console.log('Connected');
   })
@@ -37,54 +32,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/', (req, res) => {
-  return Post.find()
-    .then((posts) => res.status(200).json({ posts }))
-    .catch((error) => res.status(500).json({ error }));
-});
-
-app.post('/', (req, res, _next) => {
-  const data = req.body;
-  const post = new Post({ ...data });
-
-  post
-    .save()
-    .then((dataSave) => {
-      res.status(201).json(dataSave);
-    })
-    .catch((error) => {
-      res.status(500).json({ error });
-    });
-});
-
-app.put('/:id', (req, res, _next) => {
-  const id = req.params.id;
-
-  return Post.findById(id)
-    .then((post) => {
-      if (post) {
-        post.set({ ...req.body });
-
-        return post
-          .save()
-          .then((dataSave) => res.status(201).json(dataSave))
-          .catch((error) => res.status(500).json({ error }));
-      } else res.status(404).json({ message: 'Post not found' });
-    })
-    .catch((error) => res.status(500).json({ error }));
-});
-
-app.delete('/:id', (req, res, _next) => {
-  const id = req.params.id;
-
-  return Post.findByIdAndDelete(id)
-    .then((post) =>
-      post
-        ? res.status(201).json({ message: 'Post deleted' })
-        : res.status(404).json({ message: 'Post not found.' })
-    )
-    .catch((error) => res.status(500).json({ error }));
-});
+app.use('/post', router);
 
 app.use((_req, res, _next) => {
   const error = new Error('Not found resource');
@@ -92,6 +40,6 @@ app.use((_req, res, _next) => {
   return res.status(404).json({ message: error.message });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}.`);
+app.listen(config.server.port, () => {
+  console.log(`Server is running on port ${config.server.port}.`);
 });
